@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancehub Profile</title>
+    <link rel="stylesheet" th:href="@{/css/freelancerprofile.css}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-left">
+             <img th:src="@{/images/WhatsApp Image 2024-11-13 at 14.21.26_529a38e9.jpg}" class="logo" alt="Freelancehub Logo">
+            <h1 class="navbar-title">Freelancehub</h1>
+        </div>
+    </header>
+
+    <br>
+	<br>
+
+    <!-- Freelancer Profile Section -->
+    <div class="profile-section">
+        <div class="profile-pic"></div>
+        <div class="profile-info">
+            <h2 th:text="${freelancer.freeName}">Freelancer Name</h2>
+            <p th:text="${freelancer.qualification}">Designation</p>
+        </div>
+		<button class="edit-btn">Edit Profile</button>
+    </div>
+
+    <div class="main-content">
+        <!-- Left Section -->
+        <div class="left-section">
+            <!-- Skills -->
+            <div class="skills">
+                <h3>Skills</h3>
+                <ul>
+                    <li th:each="skill : ${freelancer.skillsAsList}" th:text="${skill}">Skill</li>
+                </ul>
+            </div>
+
+            <!-- Education -->
+            <div class="education">
+                <h3>Education</h3>
+                <p th:text="${freelancer.qualification}">Bachelors in Computer Science</p>
+                <h4>Certifications</h4>
+                <ul>
+                    <!-- Static data for now; dynamically load if needed -->
+                    <li>AWS Certified Developer</li>
+                    <li>Google UX Design Certificate</li>
+                    <li>Meta Frontend Developer</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="right-section">
+            <!-- Accepted Projects -->
+            <div class="accepted-projects">
+                <h3>Accepted Projects</h3>
+                <!-- Example static projects; replace with dynamic logic if applicable -->
+                <div class="project">
+                    <p><strong>Custom CRM Development</strong></p>
+                    <p>Bid Amount: $4,500</p>
+                    <p>Client: Tech Solutions Inc.</p>
+                    <span class="status pending">Pending</span>
+                </div>
+                <div class="project">
+                    <p><strong>Custom CRM Development</strong></p>
+                    <p>Bid Amount: $4,500</p>
+                    <p>Client: Tech Solutions Inc.</p>
+                    <span class="status verify">Verify</span>
+                </div>
+            </div>
+
+            <!-- Completed Projects -->
+            <div class="completed-projects">
+                <h3>Completed Projects</h3>
+                <div class="project">
+                    <p><strong>Custom CRM Development</strong></p>
+                    <p>Progress: 70%</p>
+                    <p>Due Date: 20th December 2024</p>
+                    <span class="status ongoing">Ongoing</span>
+                </div>
+                <div class="project">
+                    <p><strong>Custom CRM Development</strong></p>
+                    <p>Progress: 100%</p>
+                    <p>Due Date: 20th October 2024</p>
+                    <span class="status completed">Completed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

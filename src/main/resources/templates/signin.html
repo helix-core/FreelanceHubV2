@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Freelancehub - Signup</title>
+</head>
+<body>
+    <h1>Signup</h1>
+    <form th:action="@{/signup}" method="post" th:object="${client}">
+        <label for="email">E-Mail:</label>
+        <input type="email" id="email" th:field="*{compEmail}" required>
+        <br>
+        <label for="companyName">Company Name:</label>
+        <input type="text" id="companyName" th:field="*{companyName}" required>
+        <br>
+        <label for="companyDescription">Company Description:</label>
+        <input type="text" id="companyDescription" th:field="*{companyDescription}" required>
+        <br>
+        <label for="typeOfProject">Types of Projects:</label>
+        <input type="text" id="typeOfProject" th:field="*{typeOfProject}" required>
+        <br>
+        <label for="repName">Representative Name:</label>
+        <input type="text" id="repName" th:field="*{repName}" required>
+        <br>
+        <label for="repDesignation">Representative Designation:</label>
+        <input type="text" id="repDesignation" th:field="*{repDesignation}" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" th:field="*{password}" required>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    <p th:if="${error}" th:text="${error}"></p>
+</body>
+</html>
