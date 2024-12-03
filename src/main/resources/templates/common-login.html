@@ -6,6 +6,8 @@
     <title>Freelancehub Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/common-login.css}">
+    <script defer src="/js/notifs.js"></script>
+    <link rel="stylesheet" th:href="@{/css/notifs.css}">
 
 </head>
 <body>
@@ -17,6 +19,10 @@
             <h1 class="navbar-title">Freelancehub</h1>
         </div>
     </header>
+    <div id="notification" 
+         th:classappend="${notificationType != null} ? 'visible ' + ${notificationType} : 'hidden'"
+         th:text="${notificationMessage}"></div>
+         
     <div class="container">
         <!-- <div class="header">
             <svg width="55" height="54" viewBox="0 0 55 54" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -33,6 +39,7 @@
             <button class="continue-button">Continue</button>
         </div>
         </form>
+        
         
         <p class="signup-text">Don’t have an account? <a th:href="@{/signup/selection}">Sign Up</a></p>
         </div>

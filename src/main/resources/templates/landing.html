@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Landing Page</title>
     <link rel="stylesheet" th:href="@{/css/landing.css}">
+    <script defer src="/js/notifs.js"></script>
+    <link rel="stylesheet" th:href="@{/css/notifs.css}">
+   
 </head>
 <body>
 
@@ -19,7 +22,12 @@
     </nav>
 </header>
 
+<div id="notification" 
+         th:classappend="${notificationType != null} ? 'visible ' + ${notificationType} : 'hidden'"
+         th:text="${notificationMessage}"></div>
+         
 <input type="hidden" id="userRole" th:value="${role}" />
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const role = document.getElementById("userRole").value;

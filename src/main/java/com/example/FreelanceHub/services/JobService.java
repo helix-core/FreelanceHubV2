@@ -23,9 +23,6 @@ public class JobService {
     private FreeJobRepository freelancerJobsRepository;
 
     @Autowired
-    private FreelancerRepository freelancerRepository;
-
-    @Autowired
     private JobRepository jobRepository;
 
     public List<FreelancerJob> getJobsByFreelancer(String freelancerId) {
@@ -37,11 +34,6 @@ public class JobService {
     }
 
     public void uploadProject(Integer jobId, MultipartFile file) throws Exception {
-        // Save the file to a directory (or cloud storage)
-//        String uploadDir = "/path/to/upload/directory/";
-//        file.transferTo(new java.io.File(uploadDir + file.getOriginalFilename()));
-
-        // Update the progress status in the database
         System.out.println("Updating job with ID: " + jobId);
         jobRepository.updateJobStatus(jobId, "Unverified");
     }

@@ -1,7 +1,6 @@
 package com.example.FreelanceHub.repositories;
 
 import com.example.FreelanceHub.models.ClientJob;
-import com.example.FreelanceHub.models.Freelancer;
 import com.example.FreelanceHub.models.FreelancerJob;
 
 import java.util.List;

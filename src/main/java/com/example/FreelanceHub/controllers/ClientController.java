@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.FreelanceHub.models.Client;
 import com.example.FreelanceHub.models.ClientJob;
@@ -55,7 +55,7 @@ public class ClientController {
     // Display the job creation form
     @GetMapping("/postjob")
     public String showJobForm(Model model) {
-    	String clientId = (String) session.getAttribute("clientId"); // Get clientId from session
+    	String clientId = (String) session.getAttribute("clientId");
         model.addAttribute("clientId", clientId);
         model.addAttribute("clientJob", new ClientJob());
         return "postjob"; 
@@ -63,10 +63,12 @@ public class ClientController {
 
     // Handle form submission
     @PostMapping("/postjob")
-	public String createJob(@ModelAttribute ClientJob clientJob) {
+	public String createJob(@ModelAttribute ClientJob clientJob, RedirectAttributes redirectAttributes) {
     	String clientId = (String) session.getAttribute("clientId");
     	clientJob.setClientId(clientId);
     	clientJobRepository.save(clientJob); 
+    	redirectAttributes.addFlashAttribute("notificationType", "success");
+    	redirectAttributes.addFlashAttribute("notificationMessage", "Job Posted Successfully!");
         return "redirect:/posted-jobs"; 
     }
     
@@ -87,18 +89,15 @@ public class ClientController {
         // Fetch all jobs for the client
         List<ClientJob> jobs = clientJobService.findByClientId(clientId);
         if (jobs == null || jobs.isEmpty()) {
-            model.addAttribute("jobsWithBids", new ArrayList<>()); // Send an empty list if no jobs are found
+            model.addAttribute("jobsWithBids", new ArrayList<>()); 
             return "bidding";
         }
 
-        // Map to hold jobs and their corresponding freelancer bids
         List<Map<String, Object>> jobsWithBids = jobs.stream()
         		.filter(job -> "pending".equals(job.getJobStat()))
         		.map(job -> {
-            // Fetch freelancer bids for the job
             List<FreelancerJob> freelancerBids = freelancerJobRepository.findByJobId(job);
 
-            // Enrich bids with freelancer details
             List<Map<String, Object>> enrichedBids = freelancerBids.stream().map(freelancerJob -> {
                 Freelancer freelancer = freelancerJob.getFreeId();
                 Map<String, Object> bidData = new HashMap<>();
@@ -115,33 +114,32 @@ public class ClientController {
             switch (sortBy) {
                 case "duration":
                 	enrichedBids.sort((bid1, bid2) -> Integer.compare(
-                		    (int) bid2.get("freelancerJobDuration"),  // reverse order
+                		    (int) bid2.get("freelancerJobDuration"),  
                 		    (int) bid1.get("freelancerJobDuration")));
                     break;
                 case "salary":
                 	enrichedBids.sort((bid1, bid2) -> Long.compare(
-                		    (long) bid2.get("freelancerJobSalary"),  // reverse order
+                		    (long) bid2.get("freelancerJobSalary"),  
                 		    (long) bid1.get("freelancerJobSalary")));
                     break;
                 case "experience":
                 	enrichedBids.sort((bid1, bid2) -> Integer.compare(
-                		    (int) bid2.get("freelancerJobExp"),  // reverse order
+                		    (int) bid2.get("freelancerJobExp"), 
                 		    (int) bid1.get("freelancerJobExp")));
 
                     break;
                 case "skillMatch":
                 	enrichedBids.sort((bid1, bid2) -> Float.compare(
-                		    (float) bid2.get("freelancerSkillMatch"),  // reverse order
+                		    (float) bid2.get("freelancerSkillMatch"),
                 		    (float) bid1.get("freelancerSkillMatch")));
                     break;
                 default:
                 	enrichedBids.sort((bid1, bid2) -> Integer.compare(
-                		    (int) bid2.get("freelancerJobDuration"),  // reverse order
+                		    (int) bid2.get("freelancerJobDuration"), 
                 		    (int) bid1.get("freelancerJobDuration")));
                     break;
             }
 
-            // Create a map containing the job and its bids
             Map<String, Object> jobWithBids = new HashMap<>();
             jobWithBids.put("job", job);
             jobWithBids.put("bids", enrichedBids);
@@ -150,46 +148,41 @@ public class ClientController {
         }).collect(Collectors.toList());
 
         model.addAttribute("jobsWithBids", jobsWithBids);
-        model.addAttribute("sortBy", sortBy);  // Send the selected sort criterion to the view
+        model.addAttribute("sortBy", sortBy);  
         return "bidding";
     }
 
     @PostMapping("/acceptBid")
     public String acceptBid(@RequestParam("jobId") int jobId,
                             @RequestParam("freelancerId") String freelancerId,
-                            Model model) {
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
         
         String clientId = (String) session.getAttribute("clientId");
         Freelancer freelancer = freeService.findByFreeId(freelancerId);
         
-        // Step 1: Fetch the ClientJob and FreelancerJob for the given jobId and freelancerId
         ClientJob clientJob = clientJobRepository.findById(jobId);
         FreelancerJob acceptedBid = freelancerJobRepository.findByJobIdAndFreeId(clientJob, freelancerId);
 
         if (clientJob == null || acceptedBid == null) {
             model.addAttribute("error", "Invalid job or freelancer.");
-            return "bidding";  // Return an error view if job or freelancer is not found
+            return "bidding"; 
         }
 
-        // Step 2: Create a new Job record (Jobs table) for the accepted freelancer
         Jobs newJob = new Jobs();
         newJob.setClientId(clientJob.getClients());
         newJob.setFreeId(acceptedBid.getFreeId());
         newJob.setJobId(clientJob);
         newJob.setProgress("ongoing");
 
-        // Save the new job entry
         jobRepository.save(newJob);
 
-        // Step 3: Update the ClientJob's status to 'assigned'
         clientJob.setJobStat("assigned");
-        clientJobRepository.save(clientJob);  // Save the updated ClientJob
+        clientJobRepository.save(clientJob); 
 
-        // Step 4: Update the FreelancerJob's status to 'accepted' and the others to 'rejected'
         acceptedBid.setStatus("accepted");
-        freelancerJobRepository.save(acceptedBid);  // Save the accepted freelancer job
+        freelancerJobRepository.save(acceptedBid);  
 
-        // Update all other freelancer bids for this job to 'rejected'
         List<FreelancerJob> allBids = freelancerJobRepository.findByJobId(clientJob);
         for (FreelancerJob bid : allBids) {
             if (!bid.getFreeId().getFreeId().equals(freelancerId)) {
@@ -198,24 +191,22 @@ public class ClientController {
             }
         }
 
-        model.addAttribute("success", "Bid accepted successfully!");
-        return "redirect:/bidding";  // Redirect to the bidding page after accepting the bid
+        redirectAttributes.addFlashAttribute("notificationType", "success");
+        redirectAttributes.addFlashAttribute("notificationMessage", "Bid accepted successfully! Job has been successfully assigned to a freelancer");
+        return "redirect:/bidding";
     }
     
     @GetMapping("/assignedjobs")
     public String getAssignedProjects(Model model, HttpSession session) {
-        // Get clientId from session
         String clientId = (String) session.getAttribute("clientId");
         Client client=clientService.findByClientId(clientId);
         
-        // Fetch ongoing and completed jobs for the client
         List<Jobs> ongoingJobs = jobRepository.findByClientIdAndProgress(client, "ongoing");
         for(Jobs job: jobRepository.findByClientIdAndProgress(client, "Unverified")){
         	ongoingJobs.add(job);
         }
         List<Jobs> completedJobs = jobRepository.findByClientIdAndProgress(client, "completed");
 
-     // Prepare additional details (duration and salary)
         Map<String, Map<String, Object>> jobDetails = new HashMap<>();
 
         for (Jobs job : ongoingJobs) {
@@ -230,12 +221,11 @@ public class ClientController {
             }
         }
 
-        // Add jobs to the model
         model.addAttribute("ongoingJobs", ongoingJobs);
         model.addAttribute("completedJobs", completedJobs);
         model.addAttribute("jobDetails", jobDetails);
 
-        return "assignedjobs"; // Return the HTML page
+        return "assignedjobs";
     }
 
 

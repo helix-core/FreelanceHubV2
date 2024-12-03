@@ -7,8 +7,6 @@ import com.example.FreelanceHub.models.FreelancerJob;
 import com.example.FreelanceHub.repositories.ClientJobRepository;
 import com.example.FreelanceHub.repositories.FreeJobRepository;
 import com.example.FreelanceHub.repositories.FreelancerRepository;
-import com.example.FreelanceHub.services.ClientService;
-import com.example.FreelanceHub.services.FreelancerService;
 
 import com.example.FreelanceHub.services.JobService;
 import jakarta.servlet.http.HttpSession;
@@ -19,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,12 +25,6 @@ import java.util.ArrayList;
 
 @Controller
 public class FreelancerController {
-	
-	@Autowired
-    private ClientService clientService;
-
-    @Autowired
-    private FreelancerService freeService;
     
     @Autowired
     private HttpSession session;
@@ -77,14 +70,13 @@ public class FreelancerController {
                 .count();
         int matchedPercentage = (int) ((matchedSkillsCount * 100.0) / jobSkills.size());
 
-        // Pass all the necessary values to the model
         model.addAttribute("job", job);
         model.addAttribute("salaryMin", job.getCostMin());
         model.addAttribute("salaryMax", job.getCostMax());
         model.addAttribute("durationMin", job.getDurMin());
         model.addAttribute("durationMax", job.getDurMax());
         model.addAttribute("experienceMin", job.getExpMin());
-        model.addAttribute("experienceMax", 50); // You can set this as per your requirement
+        model.addAttribute("experienceMax", 50); 
         model.addAttribute("matchedSkillsPercentage", matchedPercentage);
         model.addAttribute("missingSkills", missingSkills);
 
@@ -100,9 +92,9 @@ public class FreelancerController {
             @RequestParam("previousWorks") MultipartFile[] previousWorks,
             @RequestParam("jobId") Integer jobId,
             Model model,
-            HttpSession session) {
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
 
-        // Retrieve job details
         Optional<ClientJob> optionalJob = clientJobRepository.findById(jobId);
         if (optionalJob.isEmpty()) {
             model.addAttribute("error", "Job not found.");
@@ -110,7 +102,6 @@ public class FreelancerController {
         }
         ClientJob job = optionalJob.get();
 
-        // Retrieve freelancer details from session
         String freelancerId = (String) session.getAttribute("freelancerId");
         if (freelancerId == null) {
             model.addAttribute("error", "Freelancer session is invalid.");
@@ -130,10 +121,9 @@ public class FreelancerController {
                 .count();
         int matchedPercentage = (int) ((matchedSkillsCount * 100.0) / jobSkills.size());
 
-        // Save FreelancerJob
         FreelancerJob freelancerJob = new FreelancerJob(salary, duration, experience, matchedPercentage, "ongoing");
-        freelancerJob.setJobId(job); // Set the ClientJob
-        freelancerJob.setFreeId(freelancer); // Set the Freelancer
+        freelancerJob.setJobId(job);
+        freelancerJob.setFreeId(freelancer); 
         try {
             freeJobRepository.save(freelancerJob);
         } catch (Exception e) {
@@ -141,12 +131,11 @@ public class FreelancerController {
             return "error";
         }
 
-        // Prepare attributes for Thymeleaf
         model.addAttribute("job", freelancerJob); // Pass the saved job
         model.addAttribute("clientName", job.getClientName());
         model.addAttribute("status", "pending");
-
-        // Forward to the new page
+        redirectAttributes.addFlashAttribute("notificationType", "success");
+        redirectAttributes.addFlashAttribute("notificationMessage", "Application Successful!");
         return "redirect:/applied-jobs";
     }
 
@@ -159,7 +148,6 @@ public class FreelancerController {
             return "error";
         }
 
-        // Fetch the applied jobs by freelancer ID
         List<FreelancerJob> appliedJobs = jobService.getJobsByFreelancer(freelancerId);
         System.out.println(appliedJobs);
 
@@ -175,31 +163,32 @@ public class FreelancerController {
     public String getAcceptedJobs(Model model) {
         String freelancerId = (String) session.getAttribute("freelancerId");
         if (freelancerId == null) {
-            return "error"; // Redirect to an error page if session is invalid
+            return "error"; 
         }
 
-        // Fetch accepted jobs for the freelancer
         List<FreelancerJob> acceptedJobs = jobService.getAcceptedJobsByFreelancer(freelancerId);
 
         if (acceptedJobs == null || acceptedJobs.isEmpty()) {
-            acceptedJobs = new ArrayList<>(); // To avoid null pointer issues in Thymeleaf
+            acceptedJobs = new ArrayList<>(); 
         }
 
         model.addAttribute("acceptedJobs", acceptedJobs);
-        return "acceptedjobs"; // Thymeleaf view name
+        return "acceptedjobs"; 
     }
 
     @PostMapping("/upload-project")
     public String uploadProject(
             @RequestParam("jobId") Integer jobId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
         try {
-            // Save the file and update the status
             jobService.uploadProject(jobId, file);
-            return "redirect:/accepted-jobs"; // Redirect back to the accepted jobs page
+            redirectAttributes.addFlashAttribute("notificationType", "success");
+            redirectAttributes.addFlashAttribute("notificationMessage", "Upload Successful!");
+            return "redirect:/accepted-jobs"; 
         } catch (Exception e) {
             e.printStackTrace();
-            return "error"; // Handle errors appropriately
+            return "error"; 
         }
     }
 

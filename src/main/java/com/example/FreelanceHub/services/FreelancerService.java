@@ -1,17 +1,11 @@
 package com.example.FreelanceHub.services;
 
-import com.example.FreelanceHub.models.ClientJob;
 import com.example.FreelanceHub.models.Freelancer;
-import com.example.FreelanceHub.models.FreelancerJob;
 import com.example.FreelanceHub.models.Roles;
 import com.example.FreelanceHub.repositories.FreeJobRepository;
 import com.example.FreelanceHub.repositories.FreelancerRepository;
 import com.example.FreelanceHub.repositories.RolesRepository;
-
 import jakarta.persistence.EntityNotFoundException;
-
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

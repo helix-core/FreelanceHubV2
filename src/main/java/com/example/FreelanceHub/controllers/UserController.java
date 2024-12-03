@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class UserController {
@@ -46,12 +47,15 @@ public class UserController {
     }
 
     @PostMapping("/signup/client")
-    public String registerClient(@ModelAttribute Client client, Model model) {
+    public String registerClient(@ModelAttribute Client client, Model model,RedirectAttributes redirectAttributes) {
         boolean isRegistered = clientService.registerClient(client);
         if (isRegistered) {
+        	redirectAttributes.addFlashAttribute("notificationType", "success");
+            redirectAttributes.addFlashAttribute("notificationMessage", "Sign Up Successful!");
             return "redirect:/login"; // Redirect to the common login page
         } else {
-            model.addAttribute("error", "Failed to register as a client. Please try again.");
+        	model.addAttribute("notificationType", "error");
+            model.addAttribute("notificationMessage", "Failed to register. Please try again");
             return "signupclient";
         }
     }
@@ -64,12 +68,15 @@ public class UserController {
     }
 
     @PostMapping("/signup/freelancer")
-    public String registerFreelancer(@ModelAttribute Freelancer freelancer, Model model) {
+    public String registerFreelancer(@ModelAttribute Freelancer freelancer, Model model,RedirectAttributes redirectAttributes) {
         boolean isRegistered = freeService.registerFreelancer(freelancer);
         if (isRegistered) {
+        	redirectAttributes.addFlashAttribute("notificationType", "success");
+            redirectAttributes.addFlashAttribute("notificationMessage", "Sign Up Successful!");
             return "redirect:/login"; // Redirect to the common login page
         } else {
-            model.addAttribute("error", "Failed to register as a freelancer. Please try again.");
+            model.addAttribute("notificationType", "error");
+            model.addAttribute("notificationMessage", "Failed to register. Please try again");
             return "signupfree";
         }
     }
@@ -83,7 +90,8 @@ public class UserController {
     @PostMapping("/login")
     public String login(@RequestParam("email") String email,
                         @RequestParam("password") String password,
-                        Model model) {
+                        Model model,
+                        RedirectAttributes redirectAttributes) {
     	
         // Check in Client table
         if (clientService.validateClient(email, password)) {
@@ -91,7 +99,10 @@ public class UserController {
         	String role=clientService.getUserRole(client.getClientId());
         	session.setAttribute("role", role);
         	session.setAttribute("clientId", client.getClientId());
+        	redirectAttributes.addFlashAttribute("notificationType", "success");
+            redirectAttributes.addFlashAttribute("notificationMessage", "Logged in successfully: Client!");
             return "redirect:"; // Redirect to the dashboard
+            
         }
         
         // Check in Freelancer table
@@ -100,17 +111,23 @@ public class UserController {
         	String role=freeService.getUserRole(free.getFreeId());
         	session.setAttribute("role", role);
         	session.setAttribute("freelancerId", free.getFreeId());
+        	redirectAttributes.addFlashAttribute("notificationType", "success");
+            redirectAttributes.addFlashAttribute("notificationMessage", "Logged in successfully: Freelancer!");
             return "redirect:"; // Redirect to the dashboard
+            
         }
         // Invalid login
-        model.addAttribute("error", "Invalid email or password");
+        model.addAttribute("notificationType", "error");
+        model.addAttribute("notificationMessage", "Invalid email or password.");
         return "common-login";
     }
     
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpSession session,RedirectAttributes redirectAttributes) {
         // Invalidate the session to remove all attributes (including the role)
         session.invalidate();
+        redirectAttributes.addFlashAttribute("notificationType", "success");
+        redirectAttributes.addFlashAttribute("notificationMessage", "Logged out successfully!");
         
         // Redirect to the landing or login page
         return "redirect:/";
@@ -152,7 +169,8 @@ public class UserController {
         model.addAttribute("freelancer", freelancer);
         return "freelancerprofile";
     }
-
+    
+  
     
 
     
